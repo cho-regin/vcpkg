@@ -3,33 +3,22 @@ vcpkg_download_distfile(ARCHIVE
     FILENAME "lua-5.4.4.tar.gz"
     SHA512 af0c35d5ba00fecbb2dd617bd7b825edf7418a16a73076e04f2a0df58cdbf098dc3ff4402e974afd789eb5d86d2e12ec6df9c84b99b23656ea694a85f83bcd21
 )
-vcpkg_extract_source_archive_ex(
-    OUT_SOURCE_PATH SOURCE_PATH
-    ARCHIVE ${ARCHIVE}
+vcpkg_extract_source_archive(
+    SOURCE_PATH
+    ARCHIVE "${ARCHIVE}"
     PATCHES
         vs2015-impl-c99.patch
         fix-ios-system.patch
 )
 
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
-
-# Used in cmake wrapper
-set(ENABLE_LUA_CPP 0)
-if ("cpp" IN_LIST FEATURES)
-    if (VCPKG_TARGET_IS_UWP)
-        message(FATAL_ERROR "Feature cpp does not support uwp.")
-    endif()
-    set(ENABLE_LUA_CPP 1)
-endif()
+file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/CMakeLists-cpp.txt" DESTINATION "${SOURCE_PATH}/cpp" RENAME "CMakeLists.txt")
 
 vcpkg_check_features(OUT_FEATURE_OPTIONS FEATURE_OPTIONS
   FEATURES
-    cpp COMPILE_AS_CPP
+    cpp COMPILE_AS_CPP # Also used in cmake wrapper
     tools INSTALL_TOOLS
 )
-if(VCPKG_TARGET_IS_IOS AND "tools" IN_LIST FEATURES)
-    message(FATAL_ERROR "lua[tools] is not supported for iOS platform build")
-endif()
 
 vcpkg_cmake_configure(
     SOURCE_PATH "${SOURCE_PATH}"
@@ -62,5 +51,4 @@ endif()
 configure_file("${CMAKE_CURRENT_LIST_DIR}/vcpkg-cmake-wrapper.cmake.in"  "${CURRENT_PACKAGES_DIR}/share/${PORT}/vcpkg-cmake-wrapper.cmake" @ONLY)
 file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/usage" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}")
 
-# Handle copyright
 file(INSTALL "${CMAKE_CURRENT_LIST_DIR}/COPYRIGHT" DESTINATION "${CURRENT_PACKAGES_DIR}/share/${PORT}" RENAME copyright)
